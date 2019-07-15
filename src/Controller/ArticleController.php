@@ -104,4 +104,16 @@ class ArticleController
 
         return $comment;
     }
+
+    /**
+     * @param $communityId
+     * @param $articleId
+     *
+     * PATCH insided.com/community/[community-id]/articles/[article-id]/disableComments
+     */
+    public function disableCommentsAction($communityId, $articleId)
+    {
+        $community = CommunityRepository::getCommunity($communityId);
+        $community->disableCommentsForArticle($articleId);
+    }
 }

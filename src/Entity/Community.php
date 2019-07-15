@@ -145,4 +145,20 @@ class Community
 
         return $posts;
     }
+
+    /**
+     * @param $articleId
+     * return void
+     */
+    public function disableCommentsForArticle($articleId): void
+    {
+        $post = null;
+        foreach ($this->posts as $post) {
+            if ($post->id == $articleId) {
+                break;
+            }
+        }
+
+        $post->setCommentsAllowed(false);
+    }
 }

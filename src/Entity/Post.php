@@ -11,6 +11,7 @@ class Post
     public $parent;
     public $comments;
     public $deleted;
+    public $commentsAllowed = true;
 
     /**
      * Post constructor.
@@ -129,5 +130,25 @@ class Post
     public function setDeleted($deleted): void
     {
         $this->deleted = $deleted;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isCommentsAllowed(): bool
+    {
+        return $this->commentsAllowed;
+    }
+
+    /**
+     * @param mixed $commentsAllowed
+     */
+    public function setCommentsAllowed($commentsAllowed)
+    {
+        if (!$commentsAllowed) {
+            $this->comments = [];
+        }
+
+        $this->commentsAllowed = $commentsAllowed;
     }
 }
