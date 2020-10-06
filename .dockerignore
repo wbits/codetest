@@ -1,0 +1,8 @@
+.cache
+.git
+.idea
+.DS_Store
+.com.apple.timemachine.supported
+docker-compose.yml
+Dockerfile
+.dockerignore
