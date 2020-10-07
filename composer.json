@@ -11,7 +11,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "InSided\\GetOnBoard\\": [
+            "InSided\\GetOnBoard\\Test\\": [
                 "tests/"
             ]
         }
