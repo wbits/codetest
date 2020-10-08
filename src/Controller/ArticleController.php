@@ -1,11 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace InSided\GetOnBoard\Controller;
 
-use InSided\GetOnBoard\Repository\CommunityRepository;
+use InSided\GetOnBoard\Core\Repository\CommunityRepositoryInterface;
+use InSided\GetOnBoard\Entity\Post;
 
 class ArticleController
 {
+    private CommunityRepositoryInterface $communityRepository;
+
+    public function __construct(CommunityRepositoryInterface $communityRepository)
+    {
+        $this->communityRepository = $communityRepository;
+    }
+
     /**
      * @param $communityId
      * @return array
@@ -14,7 +24,11 @@ class ArticleController
      */
     public function listAction($communityId)
     {
-        $community = CommunityRepository::getCommunity($communityId);
+        $community = $this->communityRepository->getCommunity($communityId);
+        if (!$community) {
+            return [];
+        }
+
         $posts = $community->getPosts();
 
         return $posts;
@@ -32,10 +46,10 @@ class ArticleController
      */
     public function createAction($userId, $communityId, $title, $text)
     {
-        $community = CommunityRepository::getCommunity($communityId);
+        $community = $this->communityRepository->getCommunity($communityId);
         $post = $community->addPost($title, $text, 'article');
 
-        $user = CommunityRepository::getUser($userId);
+        $user = $this->communityRepository->getUser($userId);
         $user->addPost($post);
 
         return $post;
@@ -53,10 +67,11 @@ class ArticleController
      */
     public function updateAction($userId, $communityId, $articleId, $title, $text)
     {
-        $user = CommunityRepository::getUser($userId);
+        $user = $this->communityRepository->getUser($userId);
+        /** @var Post $userPost */
         foreach ($user->getPosts() as $userPost) {
-            if ($userPost->id == $articleId) {
-                $community = CommunityRepository::getCommunity($communityId);
+            if ($userPost->getId() == $articleId) {
+                $community = $this->communityRepository->getCommunity($communityId);
                 $post = $community->updatePost($articleId, $title, $text);
             }
         }
@@ -75,10 +90,10 @@ class ArticleController
      */
     public function deleteAction($userId, $communityId, $articleId)
     {
-        $user = CommunityRepository::getUser($userId);
+        $user = $this->communityRepository->getUser($userId);
         foreach ($user->getPosts() as $userPost) {
             if ($userPost->id == $articleId) {
-                $community = CommunityRepository::getCommunity($communityId);
+                $community = $this->communityRepository->getCommunity($communityId);
                 $community->deletePost($articleId);
             }
         }
@@ -96,10 +111,10 @@ class ArticleController
      */
     public function commentAction($userId, $communityId, $articleId, $text)
     {
-        $community = CommunityRepository::getCommunity($communityId);
+        $community = $this->communityRepository->getCommunity($communityId);
         $comment = $community->addComment($articleId, $text);
 
-        $user = CommunityRepository::getUser($userId);
+        $user = $this->communityRepository->getUser($userId);
         $user->addComment($comment);
 
         return $comment;
@@ -113,7 +128,7 @@ class ArticleController
      */
     public function disableCommentsAction($communityId, $articleId)
     {
-        $community = CommunityRepository::getCommunity($communityId);
+        $community = $this->communityRepository->getCommunity($communityId);
         $community->disableCommentsForArticle($articleId);
     }
 }
