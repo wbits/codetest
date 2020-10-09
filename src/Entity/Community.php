@@ -91,8 +91,6 @@ class Community
         $post->setTitle($title);
         $post->setText($text);
 
-        $this->posts[] = $post;
-
         return $post;
     }
 
