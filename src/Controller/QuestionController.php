@@ -2,10 +2,17 @@
 
 namespace InSided\GetOnBoard\Controller;
 
-use InSided\GetOnBoard\Repository\CommunityRepository;
+use InSided\GetOnBoard\Core\Repository\CommunityRepositoryInterface;
+use InSided\GetOnBoard\Entity\Post;
 
 class QuestionController
 {
+    private CommunityRepositoryInterface $communityRepository;
+
+    public function __construct(CommunityRepositoryInterface $communityRepository)
+    {
+        $this->communityRepository = $communityRepository;
+    }
     /**
      * @param $communityId
      * @return array
@@ -14,7 +21,11 @@ class QuestionController
      */
     public function listAction($communityId)
     {
-        $community = CommunityRepository::getCommunity($communityId);
+        $community = $this->communityRepository->getCommunity($communityId);
+        if (!$community) {
+            return [];
+        }
+
         $posts = $community->getPosts();
 
         return $posts;
@@ -32,10 +43,10 @@ class QuestionController
      */
     public function createAction($userId, $communityId, $title, $text)
     {
-        $community = CommunityRepository::getCommunity($communityId);
+        $community = $this->communityRepository->getCommunity($communityId);
         $post = $community->addPost($title, $text, 'question');
 
-        $user = CommunityRepository::getUser($userId);
+        $user = $this->communityRepository->getUser($userId);
         $user->addPost($post);
 
         return $post;
@@ -53,10 +64,11 @@ class QuestionController
      */
     public function updateAction($userId, $communityId, $questionId, $title, $text)
     {
-        $user = CommunityRepository::getUser($userId);
+        $user = $this->communityRepository->getUser($userId);
+        /** @var Post $userPost */
         foreach ($user->getPosts() as $userPost) {
-            if ($userPost->id == $questionId) {
-                $community = CommunityRepository::getCommunity($communityId);
+            if ($userPost->getId() == $questionId) {
+                $community = $this->communityRepository->getCommunity($communityId);
                 $post = $community->updatePost($questionId, $title, $text);
             }
         }
@@ -75,10 +87,11 @@ class QuestionController
      */
     public function deleteAction($userId, $communityId, $questionId)
     {
-        $user = CommunityRepository::getUser($userId);
+        $user = $this->communityRepository->getUser($userId);
+        /** @var Post $userPost */
         foreach ($user->getPosts() as $userPost) {
-            if ($userPost->id == $questionId) {
-                $community = CommunityRepository::getCommunity($communityId);
+            if ($userPost->getId() == $questionId) {
+                $community = $this->communityRepository->getCommunity($communityId);
                 $community->deletePost($questionId);
             }
         }
@@ -96,10 +109,10 @@ class QuestionController
      */
     public function commentAction($userId, $communityId, $questionId, $text)
     {
-        $community = CommunityRepository::getCommunity($communityId);
+        $community = $this->communityRepository->getCommunity($communityId);
         $comment = $community->addComment($questionId, $text);
 
-        $user = CommunityRepository::getUser($userId);
+        $user = $this->communityRepository->getUser($userId);
         $user->addComment($comment);
 
         return $comment;
