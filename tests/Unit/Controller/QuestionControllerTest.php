@@ -6,6 +6,7 @@ namespace InSided\GetOnBoard\Test\Unit\Controller;
 
 use InSided\GetOnBoard\Controller\QuestionController;
 use InSided\GetOnBoard\Core\Repository\CommunityRepositoryInterface;
+use InSided\GetOnBoard\Core\Repository\UserRepositoryInterface;
 use InSided\GetOnBoard\Entity\Comment;
 use InSided\GetOnBoard\Entity\Community;
 use InSided\GetOnBoard\Entity\Post;
@@ -14,6 +15,17 @@ use PHPUnit\Framework\TestCase;
 
 class QuestionControllerTest extends TestCase
 {
+    private CommunityRepositoryInterface $communityRepository;
+    private UserRepositoryInterface $userRepository;
+    private QuestionController $controller;
+
+    public function setUp(): void
+    {
+        $this->communityRepository = $this->createMock(CommunityRepositoryInterface::class);
+        $this->userRepository = $this->createMock(UserRepositoryInterface::class);
+        $this->controller = new QuestionController($this->communityRepository, $this->userRepository);
+    }
+
     public function testUserCanListQuestions()
     {
         $communityId = 'xyz';
@@ -26,14 +38,12 @@ class QuestionControllerTest extends TestCase
             ->method('getPosts')
             ->willReturn($questions);
 
-        $communityRepository = $this->createMock(CommunityRepositoryInterface::class);
-        $communityRepository->expects($this->once())
+        $this->communityRepository->expects($this->once())
             ->method('getCommunity')
             ->with($this->equalTo($communityId))
             ->willReturn($community);
 
-        $controller = new QuestionController($communityRepository);
-        $actualQuestions = $controller->listAction($communityId);
+        $actualQuestions = $this->controller->listAction($communityId);
 
         $this->assertSame($questions, $actualQuestions);
     }
@@ -41,14 +51,12 @@ class QuestionControllerTest extends TestCase
     public function testUserGetsAnEmptyQuestionListForNonExistingCommunity(): void
     {
         $communityId = 'xyz';
-        $communityRepository = $this->createMock(CommunityRepositoryInterface::class);
-        $communityRepository->expects($this->once())
+        $this->communityRepository->expects($this->once())
             ->method('getCommunity')
             ->with($this->equalTo($communityId))
             ->willReturn(null);
-        $controller = new QuestionController($communityRepository);
 
-        $actualQuestions = $controller->listAction($communityId);
+        $actualQuestions = $this->controller->listAction($communityId);
         $this->assertEmpty($actualQuestions);
     }
 
@@ -71,18 +79,16 @@ class QuestionControllerTest extends TestCase
             ->method('addPost')
             ->with($this->equalTo($question));
 
-        $communityRepository = $this->createMock(CommunityRepositoryInterface::class);
-        $communityRepository->expects($this->once())
+        $this->communityRepository->expects($this->once())
             ->method('getCommunity')
             ->with($this->equalTo($communityId))
             ->willReturn($community);
-        $communityRepository->expects($this->once())
+        $this->userRepository->expects($this->once())
             ->method('getUser')
             ->with($this->equalTo($userId))
             ->willReturn($user);
 
-        $controller = new QuestionController($communityRepository);
-        $createdQuestion = $controller->createAction($userId, $communityId, $title, $content);
+        $createdQuestion = $this->controller->createAction($userId, $communityId, $title, $content);
 
         $this->assertSame($question, $createdQuestion);
     }
@@ -113,18 +119,16 @@ class QuestionControllerTest extends TestCase
             ->with($this->equalTo($questionId), $this->equalTo($title), $this->equalTo($content))
             ->willReturn($question);
 
-        $communityRepository = $this->createMock(CommunityRepositoryInterface::class);
-        $communityRepository->expects($this->once())
+        $this->communityRepository->expects($this->once())
             ->method('getCommunity')
             ->with($this->equalTo($communityId))
             ->willReturn($community);
-        $communityRepository->expects($this->once())
+        $this->userRepository->expects($this->once())
             ->method('getUser')
             ->with($this->equalTo($userId))
             ->willReturn($user);
 
-        $controller = new QuestionController($communityRepository);
-        $updatedQuestion = $controller->updateAction($userId, $communityId, $questionId, $title, $content);
+        $updatedQuestion = $this->controller->updateAction($userId, $communityId, $questionId, $title, $content);
 
         $this->assertSame($question, $updatedQuestion);
     }
@@ -151,18 +155,16 @@ class QuestionControllerTest extends TestCase
         $community->expects($this->once())
             ->method('deletePost');
 
-        $communityRepository = $this->createMock(CommunityRepositoryInterface::class);
-        $communityRepository->expects($this->once())
+        $this->communityRepository->expects($this->once())
             ->method('getCommunity')
             ->with($this->equalTo($communityId))
             ->willReturn($community);
-        $communityRepository->expects($this->once())
+        $this->userRepository->expects($this->once())
             ->method('getUser')
             ->with($this->equalTo($userId))
             ->willReturn($user);
 
-        $controller = new QuestionController($communityRepository);
-        $controller->deleteAction($userId, $communityId, $questionId);
+        $this->controller->deleteAction($userId, $communityId, $questionId);
     }
 
     public function testUserCanComment()
@@ -183,18 +185,16 @@ class QuestionControllerTest extends TestCase
             ->method('addComment')
             ->with($this->equalTo($comment));
 
-        $communityRepository = $this->createMock(CommunityRepositoryInterface::class);
-        $communityRepository->expects($this->once())
+        $this->communityRepository->expects($this->once())
             ->method('getCommunity')
             ->with($this->equalTo($communityId))
             ->willReturn($community);
-        $communityRepository->expects($this->once())
+        $this->userRepository->expects($this->once())
             ->method('getUser')
             ->with($this->equalTo($userId))
             ->willReturn($user);
 
-        $controller = new QuestionController($communityRepository);
-        $createdComment = $controller->commentAction($userId, $communityId, $questionId, $content);
+        $createdComment = $this->controller->commentAction($userId, $communityId, $questionId, $content);
 
         $this->assertSame($comment, $createdComment);
     }

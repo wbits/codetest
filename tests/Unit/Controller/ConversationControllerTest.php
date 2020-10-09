@@ -6,6 +6,7 @@ namespace InSided\GetOnBoard\Test\Unit\Controller;
 
 use InSided\GetOnBoard\Controller\ConversationController;
 use InSided\GetOnBoard\Core\Repository\CommunityRepositoryInterface;
+use InSided\GetOnBoard\Core\Repository\UserRepositoryInterface;
 use InSided\GetOnBoard\Entity\Comment;
 use InSided\GetOnBoard\Entity\Community;
 use InSided\GetOnBoard\Entity\Post;
@@ -14,6 +15,17 @@ use PHPUnit\Framework\TestCase;
 
 class ConversationControllerTest extends TestCase
 {
+    private CommunityRepositoryInterface $communityRepository;
+    private UserRepositoryInterface $userRepository;
+    private ConversationController $controller;
+
+    public function setUp(): void
+    {
+        $this->communityRepository = $this->createMock(CommunityRepositoryInterface::class);
+        $this->userRepository = $this->createMock(UserRepositoryInterface::class);
+        $this->controller = new ConversationController($this->communityRepository, $this->userRepository);
+    }
+
     public function testUserCanListConversations()
     {
         $communityId = 'xyz';
@@ -26,14 +38,12 @@ class ConversationControllerTest extends TestCase
             ->method('getPosts')
             ->willReturn($conversations);
 
-        $communityRepository = $this->createMock(CommunityRepositoryInterface::class);
-        $communityRepository->expects($this->once())
+        $this->communityRepository->expects($this->once())
             ->method('getCommunity')
             ->with($this->equalTo($communityId))
             ->willReturn($community);
 
-        $controller = new ConversationController($communityRepository);
-        $actualConversations = $controller->listAction($communityId);
+        $actualConversations = $this->controller->listAction($communityId);
 
         $this->assertSame($conversations, $actualConversations);
     }
@@ -41,22 +51,20 @@ class ConversationControllerTest extends TestCase
     public function testUserGetsAnEmptyConversationListForNonExistingCommunity(): void
     {
         $communityId = 'xyz';
-        $communityRepository = $this->createMock(CommunityRepositoryInterface::class);
-        $communityRepository->expects($this->once())
+        $this->communityRepository->expects($this->once())
             ->method('getCommunity')
             ->with($this->equalTo($communityId))
             ->willReturn(null);
-        $controller = new ConversationController($communityRepository);
 
-        $actualConversations = $controller->listAction($communityId);
+        $actualConversations = $this->controller->listAction($communityId);
         $this->assertEmpty($actualConversations);
     }
 
-    public function testUserCanCreateAnArticle()
+    public function testUserCanCreateAConversation()
     {
         $userId = 'abc';
         $communityId = 'xyz';
-        $title = 'My awesome article';
+        $title = 'My awesome conversation';
         $content = 'My awesome content';
 
         $conversation = $this->createMock(Post::class);
@@ -71,18 +79,16 @@ class ConversationControllerTest extends TestCase
             ->method('addPost')
             ->with($this->equalTo($conversation));
 
-        $communityRepository = $this->createMock(CommunityRepositoryInterface::class);
-        $communityRepository->expects($this->once())
+        $this->communityRepository->expects($this->once())
             ->method('getCommunity')
             ->with($this->equalTo($communityId))
             ->willReturn($community);
-        $communityRepository->expects($this->once())
+        $this->userRepository->expects($this->once())
             ->method('getUser')
             ->with($this->equalTo($userId))
             ->willReturn($user);
 
-        $controller = new ConversationController($communityRepository);
-        $createdConversation = $controller->createAction($userId, $communityId, $title, $content);
+        $createdConversation = $this->controller->createAction($userId, $communityId, $title, $content);
 
         $this->assertSame($conversation, $createdConversation);
     }
@@ -113,18 +119,16 @@ class ConversationControllerTest extends TestCase
             ->with($this->equalTo($conversationId), $this->equalTo($title), $this->equalTo($content))
             ->willReturn($conversation);
 
-        $communityRepository = $this->createMock(CommunityRepositoryInterface::class);
-        $communityRepository->expects($this->once())
+        $this->communityRepository->expects($this->once())
             ->method('getCommunity')
             ->with($this->equalTo($communityId))
             ->willReturn($community);
-        $communityRepository->expects($this->once())
+        $this->userRepository->expects($this->once())
             ->method('getUser')
             ->with($this->equalTo($userId))
             ->willReturn($user);
 
-        $controller = new ConversationController($communityRepository);
-        $updatedConversation = $controller->updateAction($userId, $communityId, $conversationId, $title, $content);
+        $updatedConversation = $this->controller->updateAction($userId, $communityId, $conversationId, $title, $content);
 
         $this->assertSame($conversation, $updatedConversation);
     }
@@ -151,18 +155,16 @@ class ConversationControllerTest extends TestCase
         $community->expects($this->once())
             ->method('deletePost');
 
-        $communityRepository = $this->createMock(CommunityRepositoryInterface::class);
-        $communityRepository->expects($this->once())
+        $this->communityRepository->expects($this->once())
             ->method('getCommunity')
             ->with($this->equalTo($communityId))
             ->willReturn($community);
-        $communityRepository->expects($this->once())
+        $this->userRepository->expects($this->once())
             ->method('getUser')
             ->with($this->equalTo($userId))
             ->willReturn($user);
 
-        $controller = new ConversationController($communityRepository);
-        $controller->deleteAction($userId, $communityId, $conversationId);
+        $this->controller->deleteAction($userId, $communityId, $conversationId);
     }
 
     public function testUserCanComment()
@@ -183,18 +185,16 @@ class ConversationControllerTest extends TestCase
             ->method('addComment')
             ->with($this->equalTo($comment));
 
-        $communityRepository = $this->createMock(CommunityRepositoryInterface::class);
-        $communityRepository->expects($this->once())
+        $this->communityRepository->expects($this->once())
             ->method('getCommunity')
             ->with($this->equalTo($communityId))
             ->willReturn($community);
-        $communityRepository->expects($this->once())
+        $this->userRepository->expects($this->once())
             ->method('getUser')
             ->with($this->equalTo($userId))
             ->willReturn($user);
 
-        $controller = new ConversationController($communityRepository);
-        $createdComment = $controller->commentAction($userId, $communityId, $conversationId, $content);
+        $createdComment = $this->controller->commentAction($userId, $communityId, $conversationId, $content);
 
         $this->assertSame($comment, $createdComment);
     }

@@ -3,16 +3,23 @@
 namespace InSided\GetOnBoard\Controller;
 
 use InSided\GetOnBoard\Core\Repository\CommunityRepositoryInterface;
+use InSided\GetOnBoard\Core\Repository\UserRepositoryInterface;
 use InSided\GetOnBoard\Entity\Post;
 
 class QuestionController
 {
     private CommunityRepositoryInterface $communityRepository;
 
-    public function __construct(CommunityRepositoryInterface $communityRepository)
-    {
+    private UserRepositoryInterface $userRepository;
+
+    public function __construct(
+        CommunityRepositoryInterface $communityRepository,
+        UserRepositoryInterface $userRepository
+    ) {
         $this->communityRepository = $communityRepository;
+        $this->userRepository = $userRepository;
     }
+
     /**
      * @param $communityId
      * @return array
@@ -46,7 +53,7 @@ class QuestionController
         $community = $this->communityRepository->getCommunity($communityId);
         $post = $community->addPost($title, $text, 'question');
 
-        $user = $this->communityRepository->getUser($userId);
+        $user = $this->userRepository->getUser($userId);
         $user->addPost($post);
 
         return $post;
@@ -64,7 +71,7 @@ class QuestionController
      */
     public function updateAction($userId, $communityId, $questionId, $title, $text)
     {
-        $user = $this->communityRepository->getUser($userId);
+        $user = $this->userRepository->getUser($userId);
         /** @var Post $userPost */
         foreach ($user->getPosts() as $userPost) {
             if ($userPost->getId() == $questionId) {
@@ -87,7 +94,7 @@ class QuestionController
      */
     public function deleteAction($userId, $communityId, $questionId)
     {
-        $user = $this->communityRepository->getUser($userId);
+        $user = $this->userRepository->getUser($userId);
         /** @var Post $userPost */
         foreach ($user->getPosts() as $userPost) {
             if ($userPost->getId() == $questionId) {
@@ -112,7 +119,7 @@ class QuestionController
         $community = $this->communityRepository->getCommunity($communityId);
         $comment = $community->addComment($questionId, $text);
 
-        $user = $this->communityRepository->getUser($userId);
+        $user = $this->userRepository->getUser($userId);
         $user->addComment($comment);
 
         return $comment;

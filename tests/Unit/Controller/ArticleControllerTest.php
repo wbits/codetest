@@ -6,6 +6,7 @@ namespace InSided\GetOnBoard\Test\Unit\Controller;
 
 use InSided\GetOnBoard\Controller\ArticleController;
 use InSided\GetOnBoard\Core\Repository\CommunityRepositoryInterface;
+use InSided\GetOnBoard\Core\Repository\UserRepositoryInterface;
 use InSided\GetOnBoard\Entity\Comment;
 use InSided\GetOnBoard\Entity\Community;
 use InSided\GetOnBoard\Entity\Post;
@@ -14,6 +15,17 @@ use PHPUnit\Framework\TestCase;
 
 class ArticleControllerTest extends TestCase
 {
+    private CommunityRepositoryInterface $communityRepository;
+    private UserRepositoryInterface $userRepository;
+    private ArticleController $controller;
+
+    public function setUp(): void
+    {
+        $this->communityRepository = $this->createMock(CommunityRepositoryInterface::class);
+        $this->userRepository = $this->createMock(UserRepositoryInterface::class);
+        $this->controller = new ArticleController($this->communityRepository, $this->userRepository);
+    }
+
     public function testUserCanListCommunityPosts(): void
     {
         $communityId = 'xyz';
@@ -24,28 +36,24 @@ class ArticleControllerTest extends TestCase
         $community->expects($this->once())
             ->method('getPosts')
             ->willReturn($posts);
-        $communityRepository = $this->createMock(CommunityRepositoryInterface::class);
-        $communityRepository->expects($this->once())
+        $this->communityRepository->expects($this->once())
             ->method('getCommunity')
             ->with($this->equalTo($communityId))
             ->willReturn($community);
-        $controller = new ArticleController($communityRepository);
 
-        $actualPosts = $controller->listAction($communityId);
+        $actualPosts = $this->controller->listAction($communityId);
         $this->assertSame($posts, $actualPosts);
     }
 
     public function testUserGetsAnEmptyPostsListForNonExistingCommunity(): void
     {
         $communityId = 'xyz';
-        $communityRepository = $this->createMock(CommunityRepositoryInterface::class);
-        $communityRepository->expects($this->once())
+        $this->communityRepository->expects($this->once())
             ->method('getCommunity')
             ->with($this->equalTo($communityId))
             ->willReturn(null);
-        $controller = new ArticleController($communityRepository);
 
-        $actualPosts = $controller->listAction($communityId);
+        $actualPosts = $this->controller->listAction($communityId);
         $this->assertEmpty($actualPosts);
     }
 
@@ -68,18 +76,16 @@ class ArticleControllerTest extends TestCase
             ->method('addPost')
             ->with($this->equalTo($post));
 
-        $communityRepository = $this->createMock(CommunityRepositoryInterface::class);
-        $communityRepository->expects($this->once())
+        $this->communityRepository->expects($this->once())
             ->method('getCommunity')
             ->with($this->equalTo($communityId))
             ->willReturn($community);
-        $communityRepository->expects($this->once())
+        $this->userRepository->expects($this->once())
             ->method('getUser')
             ->with($this->equalTo($userId))
             ->willReturn($user);
 
-        $controller = new ArticleController($communityRepository);
-        $createdPost = $controller->createAction($userId, $communityId, $title, $content);
+        $createdPost = $this->controller->createAction($userId, $communityId, $title, $content);
 
         $this->assertSame($post, $createdPost);
     }
@@ -110,18 +116,16 @@ class ArticleControllerTest extends TestCase
             ->with($this->equalTo($articleId), $this->equalTo($title), $this->equalTo($content))
             ->willReturn($article);
 
-        $communityRepository = $this->createMock(CommunityRepositoryInterface::class);
-        $communityRepository->expects($this->once())
+        $this->communityRepository->expects($this->once())
             ->method('getCommunity')
             ->with($this->equalTo($communityId))
             ->willReturn($community);
-        $communityRepository->expects($this->once())
+        $this->userRepository->expects($this->once())
             ->method('getUser')
             ->with($this->equalTo($userId))
             ->willReturn($user);
 
-        $controller = new ArticleController($communityRepository);
-        $updatedArticle = $controller->updateAction($userId, $communityId, $articleId, $title, $content);
+        $updatedArticle = $this->controller->updateAction($userId, $communityId, $articleId, $title, $content);
 
         $this->assertSame($article, $updatedArticle);
     }
@@ -144,18 +148,16 @@ class ArticleControllerTest extends TestCase
             ->method('addComment')
             ->with($this->equalTo($comment));
 
-        $communityRepository = $this->createMock(CommunityRepositoryInterface::class);
-        $communityRepository->expects($this->once())
+        $this->communityRepository->expects($this->once())
             ->method('getCommunity')
             ->with($this->equalTo($communityId))
             ->willReturn($community);
-        $communityRepository->expects($this->once())
+        $this->userRepository->expects($this->once())
             ->method('getUser')
             ->with($this->equalTo($userId))
             ->willReturn($user);
 
-        $controller = new ArticleController($communityRepository);
-        $createdComment = $controller->commentAction($userId, $communityId, $articleId, $content);
+        $createdComment = $this->controller->commentAction($userId, $communityId, $articleId, $content);
 
         $this->assertSame($comment, $createdComment);
     }
@@ -170,13 +172,11 @@ class ArticleControllerTest extends TestCase
             ->method('disableCommentsForArticle')
             ->with($this->equalTo($articleId));
 
-        $communityRepository = $this->createMock(CommunityRepositoryInterface::class);
-        $communityRepository->expects($this->once())
+        $this->communityRepository->expects($this->once())
             ->method('getCommunity')
             ->with($this->equalTo($communityId))
             ->willReturn($community);
 
-        $controller = new ArticleController($communityRepository);
-        $controller->disableCommentsAction($communityId, $articleId);
+        $this->controller->disableCommentsAction($communityId, $articleId);
     }
 }
