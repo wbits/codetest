@@ -145,10 +145,6 @@ class Post
      */
     public function setCommentsAllowed($commentsAllowed)
     {
-        if (!$commentsAllowed) {
-            $this->comments = [];
-        }
-
         $this->commentsAllowed = $commentsAllowed;
     }
 }
