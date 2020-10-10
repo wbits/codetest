@@ -2,12 +2,11 @@
 
 namespace InSided\GetOnBoard\Core\Entity;
 
-use InSided\GetOnBoard\Entity\Comment;
-
 class User
 {
     private string $id;
     private string $username;
+    private Community $community;
 
     /**
      * @var Post[]
@@ -42,6 +41,16 @@ class User
     public function setUsername(string $username): void
     {
         $this->username = $username;
+    }
+
+    public function getCommunity(): Community
+    {
+        return $this->community;
+    }
+
+    public function setCommunity(Community $community): void
+    {
+        $this->community = $community;
     }
 
     /**
