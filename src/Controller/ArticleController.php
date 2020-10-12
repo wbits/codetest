@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace InSided\GetOnBoard\Controller;
 
 use InSided\GetOnBoard\Core\Command\CreateArticleCommand;
+use InSided\GetOnBoard\Core\Command\UpdateArticleCommand;
 use InSided\GetOnBoard\Core\Entity\Comment;
 use InSided\GetOnBoard\Core\Exception\Post\InvalidPostTypeException;
 use InSided\GetOnBoard\Core\Repository\CommentRepositoryInterface;
@@ -111,8 +112,8 @@ class ArticleController
             return null;
         }
 
-        $post->setText($text);
-        $post->setTitle($title);
+        $command = new UpdateArticleCommand($post, $title, $text);
+        $this->commandDispatcher->dispatch($command);
 
         return $this->entityMapper->map($post);
     }

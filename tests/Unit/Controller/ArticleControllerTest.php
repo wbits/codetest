@@ -6,6 +6,7 @@ namespace InSided\GetOnBoard\Test\Unit\Controller;
 
 use InSided\GetOnBoard\Controller\ArticleController;
 use InSided\GetOnBoard\Core\Command\CreateArticleCommand;
+use InSided\GetOnBoard\Core\Command\UpdateArticleCommand;
 use InSided\GetOnBoard\Core\Entity\Comment;
 use InSided\GetOnBoard\Core\Entity\Community;
 use InSided\GetOnBoard\Core\Entity\Post;
@@ -131,17 +132,15 @@ class ArticleControllerTest extends TestCase
         $content = 'My awesome content';
 
         $article = $this->createMock(Post::class);
-        $article->expects($this->once())
-            ->method('setTitle')
-            ->with($this->equalTo($title));
-        $article->expects($this->once())
-            ->method('setText')
-            ->with($this->equalTo($content));
 
         $this->postRepository->expects($this->once())
             ->method('getPost')
             ->with($this->equalTo($articleId))
             ->willReturn($article);
+
+        $this->commandDispatcher->expects($this->once())
+            ->method('dispatch')
+            ->with($this->isInstanceOf(UpdateArticleCommand::class));
 
         $this->entityMapper->expects($this->once())
             ->method('map')
