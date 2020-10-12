@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace InSided\GetOnBoard\Controller;
 
+use InSided\GetOnBoard\Core\Command\CreateArticleCommand;
 use InSided\GetOnBoard\Core\Entity\Comment;
 use InSided\GetOnBoard\Core\Exception\Post\InvalidPostTypeException;
 use InSided\GetOnBoard\Core\Repository\CommentRepositoryInterface;
@@ -12,6 +13,7 @@ use InSided\GetOnBoard\Core\Repository\PostRepositoryInterface;
 use InSided\GetOnBoard\Core\Repository\UserRepositoryInterface;
 use InSided\GetOnBoard\Core\Entity\Post;
 use InSided\GetOnBoard\Core\Services\IdGeneratorInterface;
+use InSided\GetOnBoard\Core\Services\Message\Dispatcher\CommandDispatcherInterface;
 use InSided\GetOnBoard\Presentation\Services\EntityMapper;
 
 class ArticleController
@@ -28,13 +30,16 @@ class ArticleController
 
     private CommentRepositoryInterface $commentRepository;
 
+    private CommandDispatcherInterface $commandDispatcher;
+
     public function __construct(
         CommunityRepositoryInterface $communityRepository,
         UserRepositoryInterface $userRepository,
         PostRepositoryInterface $postRepository,
         CommentRepositoryInterface $commentRepository,
         EntityMapper $entityMapper,
-        IdGeneratorInterface $idGenerator
+        IdGeneratorInterface $idGenerator,
+        CommandDispatcherInterface $commandDispatcher
     ) {
         $this->communityRepository = $communityRepository;
         $this->userRepository = $userRepository;
@@ -42,6 +47,7 @@ class ArticleController
         $this->commentRepository = $commentRepository;
         $this->entityMapper = $entityMapper;
         $this->idGenerator = $idGenerator;
+        $this->commandDispatcher = $commandDispatcher;
     }
 
     /**
@@ -64,36 +70,28 @@ class ArticleController
     }
 
     /**
+     * @param $userId
      * @param $communityId
      * @param $title
      * @param $text
      *
-     * @return \InSided\GetOnBoard\Entity\Post|null
+     * @return \InSided\GetOnBoard\Presentation\Entity\Post|null
      *
      * POST insided.com/community/[user-id]/[community-id]/articles/[type]
-     *
      */
     public function createAction($userId, $communityId, $title, $text)
     {
-        $postId = $this->idGenerator->generate();
-        try {
-            $post = new Post($postId, Post::TYPE_ARTICLE);
-        } catch (InvalidPostTypeException $e) {
-            return null;
-        }
+        $newArticleId = $this->idGenerator->generate();
+        $createArticleCommand = new CreateArticleCommand(
+            $newArticleId,
+            $communityId,
+            $userId,
+            $title,
+            $text,
+        );
+        $this->commandDispatcher->dispatch($createArticleCommand);
 
-        $community = $this->communityRepository->getCommunity($communityId);
-        $user = $this->userRepository->getUser($userId);
-        $post->setCommunity($community);
-        $post->setUser($user);
-        $post->setTitle($title);
-        $post->setText($text);
-
-        $this->postRepository->addPost($post);
-        $community->addPost($post);
-        $user->addPost($post);
-
-        return $this->entityMapper->map($post);
+        return $this->entityMapper->map($this->postRepository->getPost($newArticleId));
     }
 
     /**

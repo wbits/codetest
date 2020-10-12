@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace InSided\GetOnBoard\Test\Unit\Controller;
 
 use InSided\GetOnBoard\Controller\ArticleController;
+use InSided\GetOnBoard\Core\Command\CreateArticleCommand;
 use InSided\GetOnBoard\Core\Entity\Comment;
 use InSided\GetOnBoard\Core\Entity\Community;
 use InSided\GetOnBoard\Core\Entity\Post;
@@ -14,6 +15,7 @@ use InSided\GetOnBoard\Core\Repository\CommunityRepositoryInterface;
 use InSided\GetOnBoard\Core\Repository\PostRepositoryInterface;
 use InSided\GetOnBoard\Core\Repository\UserRepositoryInterface;
 use InSided\GetOnBoard\Core\Services\IdGeneratorInterface;
+use InSided\GetOnBoard\Core\Services\Message\Dispatcher\CommandDispatcherInterface;
 use InSided\GetOnBoard\Presentation\Entity\Comment as PresentationComment;
 use InSided\GetOnBoard\Presentation\Entity\Post as PresentationPost;
 use InSided\GetOnBoard\Presentation\Services\EntityMapper;
@@ -27,6 +29,7 @@ class ArticleControllerTest extends TestCase
     private CommentRepositoryInterface $commentRepository;
     private IdGeneratorInterface $idGenerator;
     private EntityMapper $entityMapper;
+    private CommandDispatcherInterface $commandDispatcher;
     private ArticleController $controller;
 
     public function setUp(): void
@@ -37,13 +40,15 @@ class ArticleControllerTest extends TestCase
         $this->commentRepository = $this->createMock(CommentRepositoryInterface::class);
         $this->idGenerator = $this->createMock(IdGeneratorInterface::class);
         $this->entityMapper = $this->createMock(EntityMapper::class);
+        $this->commandDispatcher = $this->createMock(CommandDispatcherInterface::class);
         $this->controller = new ArticleController(
             $this->communityRepository,
             $this->userRepository,
             $this->postRepository,
             $this->commentRepository,
             $this->entityMapper,
-            $this->idGenerator
+            $this->idGenerator,
+            $this->commandDispatcher
         );
     }
 
@@ -98,28 +103,14 @@ class ArticleControllerTest extends TestCase
             ->method('generate')
             ->willReturn('randomId');
 
-        $community = $this->createMock(Community::class);
-        $community->expects($this->once())
-            ->method('addPost')
-            ->with($this->isInstanceOf(Post::class));
-
-        $user = $this->createMock(User::class);
-        $user->expects($this->once())
-            ->method('addPost')
-            ->with($this->isInstanceOf(Post::class));
-
-        $this->communityRepository->expects($this->once())
-            ->method('getCommunity')
-            ->with($this->equalTo($communityId))
-            ->willReturn($community);
-        $this->userRepository->expects($this->once())
-            ->method('getUser')
-            ->with($this->equalTo($userId))
-            ->willReturn($user);
+        $this->commandDispatcher->expects($this->once())
+            ->method('dispatch')
+            ->with($this->isInstanceOf(CreateArticleCommand::class));
 
         $this->postRepository->expects($this->once())
-            ->method('addPost')
-            ->with($this->isInstanceOf(Post::class));
+            ->method('getPost')
+            ->with($this->equalTo('randomId'))
+            ->willReturn($this->createMock(Post::class));
 
         $this->entityMapper->expects($this->once())
             ->method('map')
