@@ -67,7 +67,7 @@ class ConversationController
      * @param $title
      * @param $text
      *
-     * @return \InSided\GetOnBoard\Entity\Post|null
+     * @return \InSided\GetOnBoard\Presentation\Entity\Post|null
      *
      * POST insided.com/community/[user-id]/[community-id]/conversations/[type]
      *
@@ -85,7 +85,6 @@ class ConversationController
         $user = $this->userRepository->getUser($userId);
         $post->setCommunity($community);
         $post->setUser($user);
-        $post->setTitle($title);
         $post->setText($text);
 
         $this->postRepository->addPost($post);
@@ -113,7 +112,6 @@ class ConversationController
         }
 
         $post->setText($text);
-        $post->setTitle($title);
 
         return $this->entityMapper->map($post);
     }

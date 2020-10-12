@@ -92,7 +92,7 @@ class ConversationControllerTest extends TestCase
     {
         $userId = 'abc';
         $communityId = 'xyz';
-        $title = 'My awesome conversation';
+        $title = '';
         $content = 'My awesome content';
 
         $this->idGenerator->expects($this->once())
@@ -137,13 +137,12 @@ class ConversationControllerTest extends TestCase
         $userId = 'abc';
         $conversationId = 'def';
         $communityId = 'xyz';
-        $title = 'Howdy!';
+        $title = '';
         $content = 'What do we eat for lunch?';
 
         $conversation = $this->createMock(Post::class);
-        $conversation->expects($this->once())
-            ->method('setTitle')
-            ->with($this->equalTo($title));
+        $conversation->expects($this->exactly(0))
+            ->method('setTitle');
         $conversation->expects($this->once())
             ->method('setText')
             ->with($this->equalTo($content));
