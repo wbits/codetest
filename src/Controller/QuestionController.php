@@ -66,7 +66,7 @@ class QuestionController
      * @param $title
      * @param $text
      *
-     * @return \InSided\GetOnBoard\Entity\Post|null
+     * @return \InSided\GetOnBoard\Presentation\Entity\Post|null
      *
      * POST insided.com/community/[user-id]/[community-id]/questions/[type]
      *
