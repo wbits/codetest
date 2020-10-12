@@ -14,6 +14,7 @@ class Post
     private array $comments;
     private bool $deleted;
     private bool $commentsAllowed;
+    private string $username;
 
     public function __construct(
         string $id,
@@ -22,7 +23,8 @@ class Post
         string $type,
         array $comments,
         bool $deleted,
-        bool $commentsAllowed
+        bool $commentsAllowed,
+        string $username
     ) {
         $this->id = $id;
         $this->title = $title;
@@ -31,6 +33,7 @@ class Post
         $this->comments = $comments;
         $this->deleted = $deleted;
         $this->commentsAllowed = $commentsAllowed;
+        $this->username = $username;
     }
 
     public function getId(): string
@@ -74,5 +77,10 @@ class Post
     public function isCommentsAllowed(): bool
     {
         return $this->commentsAllowed;
+    }
+
+    public function getUsername(): string
+    {
+        return $this->username;
     }
 }

@@ -21,7 +21,8 @@ class PostMapper
                 $corePost->getComments()
             ),
             $corePost->isDeleted(),
-            $corePost->isCommentsAllowed()
+            $corePost->isCommentsAllowed(),
+            $corePost->getUser()->getUsername()
         );
     }
 }
