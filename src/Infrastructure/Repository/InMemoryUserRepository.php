@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace InSided\GetOnBoard\Infrastructure\Repository;
 
+use InSided\GetOnBoard\Core\Entity\User;
 use InSided\GetOnBoard\Core\Repository\UserRepositoryInterface;
-use InSided\GetOnBoard\Entity\User;
 
 class InMemoryUserRepository implements UserRepositoryInterface
 {
@@ -17,7 +17,7 @@ class InMemoryUserRepository implements UserRepositoryInterface
     public function getUser(string $id): ?User
     {
         foreach (self::$users as $user) {
-            if ($user->id == $id) {
+            if ($user->getId() == $id) {
                 return $user;
             }
         }

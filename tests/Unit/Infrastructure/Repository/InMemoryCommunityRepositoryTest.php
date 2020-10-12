@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace InSided\GetOnBoard\Test\Unit\Infrastructure\Repository;
 
-use InSided\GetOnBoard\Entity\Community;
+use InSided\GetOnBoard\Core\Entity\Community;
 use InSided\GetOnBoard\Infrastructure\Repository\InMemoryCommunityRepository;
 use PHPUnit\Framework\TestCase;
 
@@ -26,7 +26,7 @@ class InMemoryCommunityRepositoryTest extends TestCase
 
     public function testStoredCommunityCanBeRetrieved(): void
     {
-        $community = new Community();
+        $community = new Community('xyz');
         $this->communityRepository->addCommunity($community);
         $storedCommunity = $this->communityRepository->getCommunity($community->getId());
 

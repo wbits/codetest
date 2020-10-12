@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace InSided\GetOnBoard\Core\Repository;
 
-use InSided\GetOnBoard\Entity\Community;
+use InSided\GetOnBoard\Core\Entity\Community;
 
 interface CommunityRepositoryInterface
 {

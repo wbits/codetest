@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace InSided\GetOnBoard\Test\Unit\Infrastructure\Repository;
 
-use InSided\GetOnBoard\Entity\User;
+use InSided\GetOnBoard\Core\Entity\User;
 use InSided\GetOnBoard\Infrastructure\Repository\InMemoryUserRepository;
 use PHPUnit\Framework\TestCase;
 
@@ -26,7 +26,7 @@ class InMemoryUserRepositoryTest extends TestCase
 
     public function testStoredUserCanBeRetrieved(): void
     {
-        $user = new User();
+        $user = new User('id');
         $this->userRepository->addUser($user);
         $storedUser = $this->userRepository->getUser($user->getId());
 

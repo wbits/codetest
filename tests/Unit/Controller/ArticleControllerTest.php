@@ -5,25 +5,46 @@ declare(strict_types=1);
 namespace InSided\GetOnBoard\Test\Unit\Controller;
 
 use InSided\GetOnBoard\Controller\ArticleController;
+use InSided\GetOnBoard\Core\Entity\Comment;
+use InSided\GetOnBoard\Core\Entity\Community;
+use InSided\GetOnBoard\Core\Entity\Post;
+use InSided\GetOnBoard\Core\Entity\User;
+use InSided\GetOnBoard\Core\Repository\CommentRepositoryInterface;
 use InSided\GetOnBoard\Core\Repository\CommunityRepositoryInterface;
+use InSided\GetOnBoard\Core\Repository\PostRepositoryInterface;
 use InSided\GetOnBoard\Core\Repository\UserRepositoryInterface;
-use InSided\GetOnBoard\Entity\Comment;
-use InSided\GetOnBoard\Entity\Community;
-use InSided\GetOnBoard\Entity\Post;
-use InSided\GetOnBoard\Entity\User;
+use InSided\GetOnBoard\Core\Services\IdGeneratorInterface;
+use InSided\GetOnBoard\Entity\Post as PresentationPost;
+use InSided\GetOnBoard\Entity\Comment as PresentationComment;
+use InSided\GetOnBoard\Presentation\Services\EntityMapper;
 use PHPUnit\Framework\TestCase;
 
 class ArticleControllerTest extends TestCase
 {
     private CommunityRepositoryInterface $communityRepository;
     private UserRepositoryInterface $userRepository;
+    private PostRepositoryInterface $postRepository;
+    private CommentRepositoryInterface $commentRepository;
+    private IdGeneratorInterface $idGenerator;
+    private EntityMapper $entityMapper;
     private ArticleController $controller;
 
     public function setUp(): void
     {
         $this->communityRepository = $this->createMock(CommunityRepositoryInterface::class);
         $this->userRepository = $this->createMock(UserRepositoryInterface::class);
-        $this->controller = new ArticleController($this->communityRepository, $this->userRepository);
+        $this->postRepository = $this->createMock(PostRepositoryInterface::class);
+        $this->commentRepository = $this->createMock(CommentRepositoryInterface::class);
+        $this->idGenerator = $this->createMock(IdGeneratorInterface::class);
+        $this->entityMapper = $this->createMock(EntityMapper::class);
+        $this->controller = new ArticleController(
+            $this->communityRepository,
+            $this->userRepository,
+            $this->postRepository,
+            $this->commentRepository,
+            $this->entityMapper,
+            $this->idGenerator
+        );
     }
 
     public function testUserCanListCommunityPosts(): void
@@ -33,16 +54,25 @@ class ArticleControllerTest extends TestCase
             $this->createMock(Post::class),
         ];
         $community = $this->createMock(Community::class);
-        $community->expects($this->once())
-            ->method('getPosts')
-            ->willReturn($posts);
         $this->communityRepository->expects($this->once())
             ->method('getCommunity')
             ->with($this->equalTo($communityId))
             ->willReturn($community);
 
+        $this->postRepository->expects($this->once())
+            ->method('getArticlesByCommunity')
+            ->with($this->equalTo($community))
+            ->willReturn($posts);
+
+        $this->entityMapper->expects($this->once())
+            ->method('map')
+            ->with($this->equalTo($posts[0]))
+            ->willReturn($this->createMock(PresentationPost::class));
+
         $actualPosts = $this->controller->listAction($communityId);
-        $this->assertSame($posts, $actualPosts);
+        $this->assertIsArray($actualPosts);
+        $this->assertCount(1, $actualPosts);
+        $this->assertInstanceOf(PresentationPost::class, $actualPosts[0]);
     }
 
     public function testUserGetsAnEmptyPostsListForNonExistingCommunity(): void
@@ -64,17 +94,19 @@ class ArticleControllerTest extends TestCase
         $title = 'My awesome article';
         $content = 'My awesome content';
 
-        $post = $this->createMock(Post::class);
+        $this->idGenerator->expects($this->once())
+            ->method('generate')
+            ->willReturn('randomId');
+
         $community = $this->createMock(Community::class);
         $community->expects($this->once())
             ->method('addPost')
-            ->with($this->equalTo($title), $this->equalTo($content), $this->equalTo('article'))
-            ->willReturn($post);
+            ->with($this->isInstanceOf(Post::class));
 
         $user = $this->createMock(User::class);
         $user->expects($this->once())
             ->method('addPost')
-            ->with($this->equalTo($post));
+            ->with($this->isInstanceOf(Post::class));
 
         $this->communityRepository->expects($this->once())
             ->method('getCommunity')
@@ -85,9 +117,18 @@ class ArticleControllerTest extends TestCase
             ->with($this->equalTo($userId))
             ->willReturn($user);
 
+        $this->postRepository->expects($this->once())
+            ->method('addPost')
+            ->with($this->isInstanceOf(Post::class));
+
+        $this->entityMapper->expects($this->once())
+            ->method('map')
+            ->with($this->isInstanceOf(Post::class))
+            ->willReturn($this->createMock(PresentationPost::class));
+
         $createdPost = $this->controller->createAction($userId, $communityId, $title, $content);
 
-        $this->assertSame($post, $createdPost);
+        $this->assertInstanceOf(PresentationPost::class, $createdPost);
     }
 
     public function testUserCanUpdateAnArticle()
@@ -100,34 +141,25 @@ class ArticleControllerTest extends TestCase
 
         $article = $this->createMock(Post::class);
         $article->expects($this->once())
-            ->method('getId')
-            ->willReturn($articleId);
-        $posts = [
-            $article,
-        ];
-        $user = $this->createMock(User::class);
-        $user->expects($this->once())
-            ->method('getPosts')
-            ->willReturn($posts);
+            ->method('setTitle')
+            ->with($this->equalTo($title));
+        $article->expects($this->once())
+            ->method('setText')
+            ->with($this->equalTo($content));
 
-        $community = $this->createMock(Community::class);
-        $community->expects($this->once())
-            ->method('updatePost')
-            ->with($this->equalTo($articleId), $this->equalTo($title), $this->equalTo($content))
+        $this->postRepository->expects($this->once())
+            ->method('getPost')
+            ->with($this->equalTo($articleId))
             ->willReturn($article);
 
-        $this->communityRepository->expects($this->once())
-            ->method('getCommunity')
-            ->with($this->equalTo($communityId))
-            ->willReturn($community);
-        $this->userRepository->expects($this->once())
-            ->method('getUser')
-            ->with($this->equalTo($userId))
-            ->willReturn($user);
+        $this->entityMapper->expects($this->once())
+            ->method('map')
+            ->with($this->isInstanceOf(Post::class))
+            ->willReturn($this->createMock(PresentationPost::class));
 
         $updatedArticle = $this->controller->updateAction($userId, $communityId, $articleId, $title, $content);
 
-        $this->assertSame($article, $updatedArticle);
+        $this->assertInstanceOf(PresentationPost::class, $updatedArticle);
     }
 
     public function testUserCanComment()
@@ -137,29 +169,38 @@ class ArticleControllerTest extends TestCase
         $communityId = 'xyz';
         $content = 'This is amazing';
 
-        $comment = $this->createMock(Comment::class);
-        $community = $this->createMock(Community::class);
-        $community->expects($this->once())
+        $article = $this->createMock(Post::class);
+        $article->expects($this->once())
             ->method('addComment')
-            ->with($this->equalTo($articleId), $this->equalTo($content))
-            ->willReturn($comment);
-        $user = $this->createMock(User::class);
-        $user->expects($this->once())
-            ->method('addComment')
-            ->with($this->equalTo($comment));
+            ->with($this->isInstanceOf(Comment::class));
 
-        $this->communityRepository->expects($this->once())
-            ->method('getCommunity')
-            ->with($this->equalTo($communityId))
-            ->willReturn($community);
+        $this->idGenerator->expects($this->once())
+            ->method('generate')
+            ->willReturn('randomId');
+
+        $this->postRepository->expects($this->once())
+            ->method('getPost')
+            ->with($this->equalTo($articleId))
+            ->willReturn($article);
+
+        $user = $this->createMock(User::class);
         $this->userRepository->expects($this->once())
             ->method('getUser')
             ->with($this->equalTo($userId))
             ->willReturn($user);
 
+        $this->commentRepository->expects($this->once())
+            ->method('addComment')
+            ->with($this->isInstanceOf(Comment::class));
+
+        $this->entityMapper->expects($this->once())
+            ->method('map')
+            ->with($this->isInstanceOf(Comment::class))
+            ->willReturn($this->createMock(PresentationComment::class));
+
         $createdComment = $this->controller->commentAction($userId, $communityId, $articleId, $content);
 
-        $this->assertSame($comment, $createdComment);
+        $this->assertInstanceOf(PresentationComment::class, $createdComment);
     }
 
     public function testCommentsCanBeDisabled()
@@ -167,16 +208,33 @@ class ArticleControllerTest extends TestCase
         $articleId = 'abc';
         $communityId = 'xyz';
 
-        $community = $this->createMock(Community::class);
-        $community->expects($this->once())
-            ->method('disableCommentsForArticle')
-            ->with($this->equalTo($articleId));
-
-        $this->communityRepository->expects($this->once())
-            ->method('getCommunity')
-            ->with($this->equalTo($communityId))
-            ->willReturn($community);
+        $article = $this->createMock(Post::class);
+        $article->expects($this->once())
+            ->method('setCommentsAllowed')
+            ->with($this->equalTo(false));
+        $this->postRepository->expects($this->once())
+            ->method('getPost')
+            ->with($this->equalTo($articleId))
+            ->willReturn($article);
 
         $this->controller->disableCommentsAction($communityId, $articleId);
+    }
+
+    public function testArticleCanBeDeleted()
+    {
+        $userId = 'id';
+        $articleId = 'abc';
+        $communityId = 'xyz';
+
+        $article = $this->createMock(Post::class);
+        $article->expects($this->once())
+            ->method('setDeleted')
+            ->with($this->equalTo(true));
+        $this->postRepository->expects($this->once())
+            ->method('getPost')
+            ->with($this->equalTo($articleId))
+            ->willReturn($article);
+
+        $this->controller->deleteAction($userId, $communityId, $articleId);
     }
 }

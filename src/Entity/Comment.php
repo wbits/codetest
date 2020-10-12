@@ -4,25 +4,21 @@ namespace InSided\GetOnBoard\Entity;
 
 class Comment
 {
-    public $id;
-    public $text;
+    private string $id;
+    private string $text;
 
-    public function __construct()
+    public function __construct(string $id, string $text)
     {
-        $this->id =  uniqid();
+        $this->id = $id;
+        $this->text = $text;
     }
 
-    public function getId()
+    public function getId(): string
     {
         return $this->id;
     }
 
-    public function setText($text)
-    {
-        $this->text = $text;
-    }
-
-    public function getText()
+    public function getText(): string
     {
         return $this->text;
     }

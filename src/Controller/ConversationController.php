@@ -2,22 +2,45 @@
 
 namespace InSided\GetOnBoard\Controller;
 
+use InSided\GetOnBoard\Core\Entity\Comment;
+use InSided\GetOnBoard\Core\Exception\Post\InvalidPostTypeException;
+use InSided\GetOnBoard\Core\Repository\CommentRepositoryInterface;
 use InSided\GetOnBoard\Core\Repository\CommunityRepositoryInterface;
+use InSided\GetOnBoard\Core\Repository\PostRepositoryInterface;
 use InSided\GetOnBoard\Core\Repository\UserRepositoryInterface;
-use InSided\GetOnBoard\Entity\Post;
+use InSided\GetOnBoard\Core\Services\IdGeneratorInterface;
+use InSided\GetOnBoard\Core\Entity\Post;
+use InSided\GetOnBoard\Presentation\Services\EntityMapper;
 
 class ConversationController
 {
+
     private CommunityRepositoryInterface $communityRepository;
 
     private UserRepositoryInterface $userRepository;
 
+    private PostRepositoryInterface $postRepository;
+
+    private EntityMapper $entityMapper;
+
+    private IdGeneratorInterface $idGenerator;
+
+    private CommentRepositoryInterface $commentRepository;
+
     public function __construct(
         CommunityRepositoryInterface $communityRepository,
-        UserRepositoryInterface $userRepository
+        UserRepositoryInterface $userRepository,
+        PostRepositoryInterface $postRepository,
+        CommentRepositoryInterface $commentRepository,
+        EntityMapper $entityMapper,
+        IdGeneratorInterface $idGenerator
     ) {
         $this->communityRepository = $communityRepository;
         $this->userRepository = $userRepository;
+        $this->postRepository = $postRepository;
+        $this->commentRepository = $commentRepository;
+        $this->entityMapper = $entityMapper;
+        $this->idGenerator = $idGenerator;
     }
 
     /**
@@ -32,9 +55,11 @@ class ConversationController
         if (!$community) {
             return [];
         }
-        $posts = $community->getPosts();
 
-        return $posts;
+        return array_map(
+            [$this->entityMapper, 'map'],
+            $this->postRepository->getConversationsByCommunity($community)
+        );
     }
 
     /**
@@ -49,13 +74,25 @@ class ConversationController
      */
     public function createAction($userId, $communityId, $title, $text)
     {
-        $community = $this->communityRepository->getCommunity($communityId);
-        $post = $community->addPost($title, $text, 'conversation');
+        $postId = $this->idGenerator->generate();
+        try {
+            $post = new Post($postId, Post::TYPE_CONVERSATION);
+        } catch (InvalidPostTypeException $e) {
+            return null;
+        }
 
+        $community = $this->communityRepository->getCommunity($communityId);
         $user = $this->userRepository->getUser($userId);
+        $post->setCommunity($community);
+        $post->setUser($user);
+        $post->setTitle($title);
+        $post->setText($text);
+
+        $this->postRepository->addPost($post);
+        $community->addPost($post);
         $user->addPost($post);
 
-        return $post;
+        return $this->entityMapper->map($post);
     }
 
     /**
@@ -70,16 +107,15 @@ class ConversationController
      */
     public function updateAction($userId, $communityId, $conversationId, $title, $text)
     {
-        $user = $this->userRepository->getUser($userId);
-        /** @var Post $userPost */
-        foreach ($user->getPosts() as $userPost) {
-            if ($userPost->getId() == $conversationId) {
-                $community = $this->communityRepository->getCommunity($communityId);
-                $post = $community->updatePost($conversationId, $title, $text);
-            }
+        $post = $this->postRepository->getPost($conversationId);
+        if (!$post) {
+            return null;
         }
 
-        return $post;
+        $post->setText($text);
+        $post->setTitle($title);
+
+        return $this->entityMapper->map($post);
     }
 
     /**
@@ -93,14 +129,12 @@ class ConversationController
      */
     public function deleteAction($userId, $communityId, $conversationId)
     {
-        $user = $this->userRepository->getUser($userId);
-        /** @var Post $userPost */
-        foreach ($user->getPosts() as $userPost) {
-            if ($userPost->getId() == $conversationId) {
-                $community = $this->communityRepository->getCommunity($communityId);
-                $community->deletePost($conversationId);
-            }
+        $post = $this->postRepository->getPost($conversationId);
+        if (!$post) {
+            return null;
         }
+
+        $post->setDeleted(true);
 
         return null;
     }
@@ -115,12 +149,22 @@ class ConversationController
      */
     public function commentAction($userId, $communityId, $conversationId, $text)
     {
-        $community = $this->communityRepository->getCommunity($communityId);
-        $comment = $community->addComment($conversationId, $text);
+        $post = $this->postRepository->getPost($conversationId);
+        if (!$post) {
+            return null;
+        }
+
+        $commentId = $this->idGenerator->generate();
+        $comment = new Comment($commentId);
+        $comment->setText($text);
+        $comment->setParent($post);
 
         $user = $this->userRepository->getUser($userId);
-        $user->addComment($comment);
+        $comment->setUser($user);
 
-        return $comment;
+        $this->commentRepository->addComment($comment);
+        $post->addComment($comment);
+
+        return $this->entityMapper->map($comment);
     }
 }

@@ -4,147 +4,75 @@ namespace InSided\GetOnBoard\Entity;
 
 class Post
 {
-    public $id;
-    public $title;
-    public $text;
-    public $type;
-    public $parent;
-    public $comments;
-    public $deleted;
-    public $commentsAllowed = true;
-
+    private string $id;
+    private string $title;
+    private string $text;
+    private string $type;
     /**
-     * Post constructor.
+     * @var Comment[]
      */
-    public function __construct()
-    {
-        $this->id =  uniqid();
-        $this->comments = [];
+    private array $comments;
+    private bool $deleted;
+    private bool $commentsAllowed;
+
+    public function __construct(
+        string $id,
+        string $title,
+        string $text,
+        string $type,
+        array $comments,
+        bool $deleted,
+        bool $commentsAllowed
+    ) {
+        $this->id = $id;
+        $this->title = $title;
+        $this->text = $text;
+        $this->type = $type;
+        $this->comments = $comments;
+        $this->deleted = $deleted;
+        $this->commentsAllowed = $commentsAllowed;
     }
 
-    /**
-     * @return string
-     */
-    public function getId()
+    public function getId(): string
     {
         return $this->id;
     }
 
-    /**
-     * @return mixed
-     */
-    public function getTitle()
+    public function getTitle(): string
     {
         return $this->title;
     }
 
-    /**
-     * @param $title
-     */
-    public function setTitle($title): void
-    {
-        $this->title = $title;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getText()
+    public function getText(): string
     {
         return $this->text;
     }
 
-    /**
-     * @param $text
-     */
-    public function setText($text): void
-    {
-        $this->text = $text;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getType()
+    public function getType(): string
     {
         return $this->type;
     }
 
-    /**
-     * @param $type
-     */
-    public function setType($type): void
-    {
-        $this->type = $type;
-    }
-
-    /**
-     * @return mixed
-     */
     public function getParent()
     {
-        return $this->parent;
+        return null;
     }
 
     /**
-     * @param $parent
-     */
-    public function setParent($parent): void
-    {
-        $this->parent = $parent;
-    }
-
-    /**
-     * @param $text
-     * @return Comment
-     */
-    public function addComment($text)
-    {
-        $comment = new Comment();
-        $comment->setText($text);
-
-        $this->comments[] = $comment;
-
-        return $comment;
-    }
-
-    /**
-     * @return array
+     * @return Comment[]
      */
     public function getComments(): array
     {
         return $this->comments;
     }
 
-    /**
-     * @return mixed
-     */
-    public function getDeleted()
+    public function getDeleted(): bool
     {
         return $this->deleted;
     }
 
-    /**
-     * @param mixed $deleted
-     */
-    public function setDeleted($deleted): void
-    {
-        $this->deleted = $deleted;
-    }
-
-    /**
-     * @return bool
-     */
     public function isCommentsAllowed(): bool
     {
         return $this->commentsAllowed;
-    }
-
-    /**
-     * @param mixed $commentsAllowed
-     */
-    public function setCommentsAllowed($commentsAllowed)
-    {
-        $this->commentsAllowed = $commentsAllowed;
     }
 }

@@ -5,7 +5,7 @@ namespace InSided\GetOnBoard\Core\Entity;
 class Comment
 {
     private string $id;
-    private string $text;
+    private string $text = '';
     private Post $parent;
     private User $user;
 

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace InSided\GetOnBoard\Infrastructure\Repository;
 
+use InSided\GetOnBoard\Core\Entity\Community;
 use InSided\GetOnBoard\Core\Repository\CommunityRepositoryInterface;
-use InSided\GetOnBoard\Entity\Community;
 
 class InMemoryCommunityRepository implements CommunityRepositoryInterface
 {
@@ -17,7 +17,7 @@ class InMemoryCommunityRepository implements CommunityRepositoryInterface
     public function getCommunity(string $id): ?Community
     {
         foreach (self::$communities as $community) {
-            if ($community->id == $id) {
+            if ($community->getId() == $id) {
                 return $community;
             }
         }
