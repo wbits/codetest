@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace InSided\GetOnBoard\Presentation\DataMapper;
 
-use InSided\GetOnBoard\Entity\Post;
+use InSided\GetOnBoard\Presentation\Entity\Post;
 use InSided\GetOnBoard\Core\Entity\Post as CorePost;
 
 class PostMapper

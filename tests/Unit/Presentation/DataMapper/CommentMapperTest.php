@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace InSided\GetOnBoard\Test\Unit\Presentation\DataMapper;
 
 use InSided\GetOnBoard\Core\Entity\Comment;
-use InSided\GetOnBoard\Entity\Comment as PresentationComment;
 use InSided\GetOnBoard\Presentation\DataMapper\CommentMapper;
+use InSided\GetOnBoard\Presentation\Entity\Comment as PresentationComment;
 use PHPUnit\Framework\TestCase;
 
 class CommentMapperTest extends TestCase

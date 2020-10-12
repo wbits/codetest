@@ -1,6 +1,6 @@
 <?php
 
-namespace InSided\GetOnBoard\Entity;
+namespace InSided\GetOnBoard\Presentation\Entity;
 
 class User
 {

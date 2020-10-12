@@ -14,8 +14,8 @@ use InSided\GetOnBoard\Core\Repository\CommunityRepositoryInterface;
 use InSided\GetOnBoard\Core\Repository\PostRepositoryInterface;
 use InSided\GetOnBoard\Core\Repository\UserRepositoryInterface;
 use InSided\GetOnBoard\Core\Services\IdGeneratorInterface;
-use InSided\GetOnBoard\Entity\Comment as PresentationComment;
-use InSided\GetOnBoard\Entity\Post as PresentationPost;
+use InSided\GetOnBoard\Presentation\Entity\Comment as PresentationComment;
+use InSided\GetOnBoard\Presentation\Entity\Post as PresentationPost;
 use InSided\GetOnBoard\Presentation\Services\EntityMapper;
 use PHPUnit\Framework\TestCase;
 

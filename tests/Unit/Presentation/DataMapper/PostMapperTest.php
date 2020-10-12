@@ -6,9 +6,9 @@ namespace InSided\GetOnBoard\Test\Unit\Presentation\DataMapper;
 
 use InSided\GetOnBoard\Core\Entity\Comment;
 use InSided\GetOnBoard\Core\Entity\Post;
-use InSided\GetOnBoard\Entity\Comment as PresentationComment;
-use InSided\GetOnBoard\Entity\Post as PresentationPost;
 use InSided\GetOnBoard\Presentation\DataMapper\PostMapper;
+use InSided\GetOnBoard\Presentation\Entity\Comment as PresentationComment;
+use InSided\GetOnBoard\Presentation\Entity\Post as PresentationPost;
 use PHPUnit\Framework\TestCase;
 
 class PostMapperTest extends TestCase

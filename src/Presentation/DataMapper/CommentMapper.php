@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace InSided\GetOnBoard\Presentation\DataMapper;
 
-use InSided\GetOnBoard\Entity\Comment;
+use InSided\GetOnBoard\Presentation\Entity\Comment;
 use InSided\GetOnBoard\Core\Entity\Comment as CoreComment;
 
 class CommentMapper
